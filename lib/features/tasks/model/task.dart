@@ -170,11 +170,30 @@ class Task {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is Task && other.id == id;
+    return other is Task && 
+           other.id == id &&
+           other.title == title &&
+           other.description == description &&
+           other.dueDate == dueDate &&
+           other.category == category &&
+           other.priority == priority &&
+           other.isCompleted == isCompleted &&
+           other.createdAt == createdAt &&
+           other.completedAt == completedAt;
   }
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => Object.hash(
+    id, 
+    title, 
+    description, 
+    dueDate, 
+    category, 
+    priority, 
+    isCompleted, 
+    createdAt, 
+    completedAt,
+  );
 
   @override
   String toString() {

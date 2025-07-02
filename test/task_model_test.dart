@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:whatbytes_assignment/features/tasks/domain/entities/task.dart';
+import 'package:whatbytes_assignment/features/tasks/model/task.dart';
 
 void main() {
   group('Task Model Tests', () {

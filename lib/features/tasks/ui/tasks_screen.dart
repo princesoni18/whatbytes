@@ -3,12 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import '../simple_task_bloc.dart';
+import '../bloc/task_bloc.dart';
 import '../../auth/simple_auth_bloc.dart';
+import '../model/task_filter.dart';
 import '../widgets/task_header.dart';
-import '../widgets/task_section.dart';
-import '../widgets/custom_bottom_nav.dart';
+import '../widgets/simple_task_item.dart';
 import '../widgets/custom_fab.dart';
+import '../widgets/task_filter_dialog.dart';
 import 'add_task_screen.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class TasksScreen extends StatefulWidget {
 }
 
 class _TasksScreenState extends State<TasksScreen> {
-  int _selectedBottomNavIndex = 0;
+
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _TasksScreenState extends State<TasksScreen> {
 
   void _toggleTaskCompletion(String taskId, bool currentStatus) {
     print('TasksScreen: Toggling task $taskId (current status: $currentStatus)');
+    print('TasksScreen: Dispatching ToggleTask event');
     context.read<TaskBloc>().add(ToggleTask(taskId));
   }
 
@@ -38,11 +40,7 @@ class _TasksScreenState extends State<TasksScreen> {
     context.read<TaskBloc>().add(DeleteTask(taskId));
   }
 
-  void _onBottomNavTap(int index) {
-    setState(() {
-      _selectedBottomNavIndex = index;
-    });
-  }
+  
 
   void _onFabPressed() {
     Navigator.of(context).push(
@@ -80,6 +78,21 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
+  void _showFilterDialog(TaskFilterCriteria currentFilter) {
+    showDialog<TaskFilterCriteria>(
+      context: context,
+      builder: (BuildContext context) {
+        return TaskFilterDialog(
+          initialCriteria: currentFilter,
+        );
+      },
+    ).then((filterCriteria) {
+      if (filterCriteria != null) {
+        context.read<TaskBloc>().add(FilterTasks(filterCriteria));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,14 +101,21 @@ class _TasksScreenState extends State<TasksScreen> {
         child: Column(
           children: [
             // Header
-            TaskHeader(
-              onMenuPressed: () {
-                // Handle menu press
+            BlocBuilder<TaskBloc, TaskState>(
+              builder: (context, state) {
+                final hasActiveFilters = state is TasksLoaded && state.filterCriteria.hasActiveFilters;
+                final currentFilter = state is TasksLoaded ? state.filterCriteria : const TaskFilterCriteria();
+                
+                return TaskHeader(
+                  onMenuPressed: () {
+                    // Handle menu press
+                    _showLogoutDialog();
+                  },
+                
+                  onFilterPressed: () => _showFilterDialog(currentFilter),
+                  hasActiveFilters: hasActiveFilters,
+                );
               },
-              onSearchPressed: () {
-                // Handle search press
-              },
-              onMorePressed: _showLogoutDialog,
             ),
             
             // Task Content
@@ -121,6 +141,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       child: CircularProgressIndicator(),
                     );
                   } else if (state is TasksLoaded) {
+                    print("state changed");
                     return _buildTasksList(state);
                   } else if (state is TaskError) {
                     return _buildErrorView(state);
@@ -136,46 +157,54 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
       
       // Bottom Navigation Bar
-      bottomNavigationBar: CustomBottomNav(
-        selectedIndex: _selectedBottomNavIndex,
-        onTap: _onBottomNavTap,
-      ),
-      
+     
       // Floating Action Button
       floatingActionButton: CustomFAB(
         onPressed: _onFabPressed,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      
     );
   }
 
   Widget _buildTasksList(TasksLoaded state) {
     // Check if there are any tasks at all
     if (state.tasks.isEmpty) {
+      final hasFilters = state.filterCriteria.hasActiveFilters;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.task_alt,
+              hasFilters ? Icons.filter_list_off : Icons.task_alt,
               size: 64.sp,
               color: AppTheme.textSecondaryColor,
             ),
             SizedBox(height: 16.h),
             Text(
-              'No Tasks Yet',
+              hasFilters ? 'No Tasks Match Filters' : 'No Tasks Yet',
               style: AppTheme.headingMedium.copyWith(
                 color: AppTheme.textPrimaryColor,
               ),
             ),
             SizedBox(height: 8.h),
             Text(
-              'Tap the + button to create your first task',
+              hasFilters 
+                  ? 'Try adjusting your filters to see more tasks'
+                  : 'Tap the + button to create your first task',
               style: AppTheme.bodyMedium.copyWith(
                 color: AppTheme.textSecondaryColor,
               ),
               textAlign: TextAlign.center,
             ),
+            if (hasFilters) ...[
+              SizedBox(height: 16.h),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<TaskBloc>().add(ClearFilters());
+                },
+                child: const Text('Clear Filters'),
+              ),
+            ],
           ],
         ),
       );
@@ -188,44 +217,104 @@ class _TasksScreenState extends State<TasksScreen> {
         children: [
           SizedBox(height: 20.h),
           
-          // Today Tasks
-          if (state.todayTasks.isNotEmpty)
-            TaskSection(
-              key: ValueKey('today_${state.todayTasks.length}_${state.todayTasks.map((t) => '${t.id}_${t.isCompleted}').join('_')}'),
-              title: 'Today',
-              tasks: state.todayTasks,
-              onTaskToggle: _toggleTaskCompletion,
-              onTaskDelete: _deleteTask,
+          // Filter Status (if any filters are active)
+          if (state.filterCriteria.hasActiveFilters)
+            Container(
+              margin: EdgeInsets.only(bottom: 16.h),
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium.r),
+                border: Border.all(
+                  color: AppTheme.primaryColor.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.filter_list,
+                    size: 16.sp,
+                    color: AppTheme.primaryColor,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      _getFilterDescription(state.filterCriteria),
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      context.read<TaskBloc>().add(ClearFilters());
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Clear',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           
-          SizedBox(height: 24.h),
-          
-          // Tomorrow Tasks
-          if (state.tomorrowTasks.isNotEmpty)
-            TaskSection(
-              key: ValueKey('tomorrow_${state.tomorrowTasks.length}_${state.tomorrowTasks.map((t) => '${t.id}_${t.isCompleted}').join('_')}'),
-              title: 'Tomorrow',
-              tasks: state.tomorrowTasks,
-              onTaskToggle: _toggleTaskCompletion,
-              onTaskDelete: _deleteTask,
+          // Tasks List Header
+          if (state.tasks.isNotEmpty) ...[
+            Text(
+              'All Tasks (${state.tasks.length})',
+              style: AppTheme.headingMedium.copyWith(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimaryColor,
+              ),
             ),
+            SizedBox(height: 16.h),
+          ],
           
-          SizedBox(height: 24.h),
-          
-          // This Week Tasks
-          if (state.thisWeekTasks.isNotEmpty)
-            TaskSection(
-              key: ValueKey('week_${state.thisWeekTasks.length}_${state.thisWeekTasks.map((t) => '${t.id}_${t.isCompleted}').join('_')}'),
-              title: 'This week',
-              tasks: state.thisWeekTasks,
-              onTaskToggle: _toggleTaskCompletion,
-              onTaskDelete: _deleteTask,
-            ),
+          // All Tasks List
+          ...state.tasks.map((task) => TaskItem(
+            key: ValueKey(task.id), // Use only task.id for stable keys
+            task: task,
+            onToggle: () => _toggleTaskCompletion(task.id, task.isCompleted),
+            onDelete: () => _deleteTask(task.id),
+          )).toList(),
           
           SizedBox(height: 100.h), // Space for FAB
         ],
       ),
     );
+  }
+
+  String _getFilterDescription(TaskFilterCriteria criteria) {
+    final List<String> parts = [];
+    
+    if (criteria.statusFilter != TaskFilter.all) {
+      parts.add(criteria.statusFilter.displayName);
+    }
+    
+    if (criteria.priorityFilters.isNotEmpty) {
+      final priorities = criteria.priorityFilters
+          .map((p) => p.displayName)
+          .join(', ');
+      parts.add('Priority: $priorities');
+    }
+    
+    if (criteria.categoryFilters.isNotEmpty) {
+      final categories = criteria.categoryFilters
+          .map((c) => c.displayName)
+          .join(', ');
+      parts.add('Category: $categories');
+    }
+    
+    return parts.join(' • ');
   }
 
   Widget _buildErrorView(TaskError state) {

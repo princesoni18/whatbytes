@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/theme/app_theme.dart';
 import 'core/injection/injection_container.dart' as di;
-import 'features/tasks/simple_task_bloc.dart';
+import 'features/tasks/bloc/task_bloc.dart';
 import 'features/auth/simple_auth_bloc.dart';
 import 'features/tasks/ui/tasks_screen.dart';
 import 'features/intro/ui/intro_screen.dart';

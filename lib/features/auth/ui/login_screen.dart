@@ -6,7 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
-import '../../../shared/widgets/social_login_button.dart';
+
 import '../widgets/auth_header.dart';
 import '../simple_auth_bloc.dart';
 import '../auth_service.dart';
@@ -28,8 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill email field with default value
-    _emailController.text = AppConstants.defaultEmail;
+   
+  
   }
 
   @override
@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 leading: const Icon(Icons.email, color: AppTheme.primaryColor),
                 title: const Text(AppConstants.defaultEmail),
                 onTap: () {
-                  _emailController.text = AppConstants.defaultEmail;
+                 
                   Navigator.pop(context);
                 },
               ),
@@ -152,24 +152,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 40.h),
 
                   // Email Dropdown Field
-                  GestureDetector(
-                    onTap: _showEmailDropdown,
-                    child: AbsorbPointer(
-                      child: CustomTextField(
+                   CustomTextField(
                         label: 'Email',
+                        hintText: "Enter your email",
                         controller: _emailController,
                         validator: _validateEmail,
                         prefixIcon: const Icon(
                           Icons.email_outlined,
                           color: AppTheme.textSecondaryColor,
                         ),
-                        suffixIcon: const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: AppTheme.textSecondaryColor,
-                        ),
+                        
                       ),
-                    ),
-                  ),
+                    
+                  
                   
                   SizedBox(height: 20.h),
 
@@ -226,56 +221,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                  
 
-                  // Divider
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          color: AppTheme.borderColor,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: Text(
-                          'or',
-                          style: AppTheme.bodyMedium,
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          color: AppTheme.borderColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  SizedBox(height: 24.h),
-                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                     SocialLoginButton(
-                    provider: AppConstants.googleProvider,
-                    onPressed: () => _handleSocialLogin('Google'),
-                  ),
-                  
-                  SocialLoginButton(
-                    provider: AppConstants.facebookProvider,
-                    onPressed: () => _handleSocialLogin('Facebook'),
-                  ),
-                  
-                  SocialLoginButton(
-                    provider: AppConstants.appleProvider,
-                    onPressed: () => _handleSocialLogin('Apple'),
-                  ),
-
-                  ],
-                 ),
-                   SizedBox(height: 24.h),
+                 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+
                       Text(
                         "Don't have an account? ",
                         style: AppTheme.bodyMedium,

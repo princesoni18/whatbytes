@@ -5,8 +5,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
-import '../domain/entities/task.dart';
-import '../simple_task_bloc.dart';
+import '../model/task.dart';
+import '../bloc/task_bloc.dart';
 
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});

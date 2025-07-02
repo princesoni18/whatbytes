@@ -1,7 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'domain/entities/task.dart';
-import 'task_service.dart';
+import '../model/task.dart';
+import '../model/task_filter.dart';
+import '../repo/task_service.dart';
 
 // Events
 abstract class TaskEvent extends Equatable {
@@ -33,6 +34,15 @@ class DeleteTask extends TaskEvent {
   List<Object> get props => [taskId];
 }
 
+class FilterTasks extends TaskEvent {
+  final TaskFilterCriteria filterCriteria;
+  const FilterTasks(this.filterCriteria);
+  @override
+  List<Object> get props => [filterCriteria];
+}
+
+class ClearFilters extends TaskEvent {}
+
 // States
 abstract class TaskState extends Equatable {
   const TaskState();
@@ -46,19 +56,15 @@ class TaskLoading extends TaskState {}
 
 class TasksLoaded extends TaskState {
   final List<Task> tasks;
-  final List<Task> todayTasks;
-  final List<Task> tomorrowTasks;
-  final List<Task> thisWeekTasks;
+  final TaskFilterCriteria filterCriteria;
 
   const TasksLoaded({
     required this.tasks,
-    required this.todayTasks,
-    required this.tomorrowTasks,
-    required this.thisWeekTasks,
+    required this.filterCriteria,
   });
 
   @override
-  List<Object> get props => [tasks, todayTasks, tomorrowTasks, thisWeekTasks];
+  List<Object> get props => [tasks, filterCriteria];
 }
 
 class TaskError extends TaskState {
@@ -74,12 +80,15 @@ class TaskError extends TaskState {
 class TaskBloc extends Bloc<TaskEvent, TaskState> {
   final TaskService _taskService;
   List<Task> _localTasks = [];
+  TaskFilterCriteria _currentFilter = const TaskFilterCriteria();
 
   TaskBloc(this._taskService) : super(TaskInitial()) {
     on<LoadTasks>(_onLoadTasks);
     on<CreateTask>(_onCreateTask);
     on<ToggleTask>(_onToggleTask);
     on<DeleteTask>(_onDeleteTask);
+    on<FilterTasks>(_onFilterTasks);
+    on<ClearFilters>(_onClearFilters);
   }
 
   Future<void> _onLoadTasks(LoadTasks event, Emitter<TaskState> emit) async {
@@ -193,32 +202,28 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     }
   }
 
+  Future<void> _onFilterTasks(FilterTasks event, Emitter<TaskState> emit) async {
+    print('TaskBloc: Applying filter - ${event.filterCriteria}');
+    _currentFilter = event.filterCriteria;
+    emit(_buildTasksLoadedState());
+  }
+
+  Future<void> _onClearFilters(ClearFilters event, Emitter<TaskState> emit) async {
+    print('TaskBloc: Clearing filters');
+    _currentFilter = const TaskFilterCriteria();
+    emit(_buildTasksLoadedState());
+  }
+
   TasksLoaded _buildTasksLoadedState() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final nextWeek = today.add(const Duration(days: 7));
+    // Apply filters to the task list
+    final filteredTasks = _localTasks.where((task) => _currentFilter.matchesTask(task)).toList();
 
-    final todayTasks = _localTasks.where((task) {
-      final taskDate = DateTime(task.dueDate.year, task.dueDate.month, task.dueDate.day);
-      return taskDate.isAtSameMomentAs(today);
-    }).toList();
-
-    final tomorrowTasks = _localTasks.where((task) {
-      final taskDate = DateTime(task.dueDate.year, task.dueDate.month, task.dueDate.day);
-      return taskDate.isAtSameMomentAs(tomorrow);
-    }).toList();
-
-    final thisWeekTasks = _localTasks.where((task) {
-      final taskDate = DateTime(task.dueDate.year, task.dueDate.month, task.dueDate.day);
-      return taskDate.isAfter(tomorrow) && taskDate.isBefore(nextWeek);
-    }).toList();
+    // Sort tasks by due date (earliest to latest)
+    filteredTasks.sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
     return TasksLoaded(
-      tasks: _localTasks,
-      todayTasks: todayTasks,
-      tomorrowTasks: tomorrowTasks,
-      thisWeekTasks: thisWeekTasks,
+      tasks: filteredTasks,
+      filterCriteria: _currentFilter,
     );
   }
 }

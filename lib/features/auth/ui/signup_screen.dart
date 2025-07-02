@@ -6,7 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
-import '../../../shared/widgets/social_login_button.dart';
+
 import '../widgets/auth_header.dart';
 import '../simple_auth_bloc.dart';
 import '../auth_service.dart';
@@ -49,14 +49,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _handleSignUp() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
-        AuthSignUpRequested(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          displayName: _nameController.text.trim().isNotEmpty 
-              ? _nameController.text.trim() 
-              : null,
-        ),
-      );
+            AuthSignUpRequested(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+              displayName: _nameController.text.trim().isNotEmpty
+                  ? _nameController.text.trim()
+                  : null,
+            ),
+          );
     }
   }
 
@@ -90,7 +90,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         },
         child: SafeArea(
           child: SingleChildScrollView(
-            
             padding: EdgeInsets.all(AppConstants.screenPadding.w),
             child: Form(
               key: _formKey,
@@ -99,7 +98,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Header
-                  SizedBox(height: 20.h,),
+                  SizedBox(
+                    height: 20.h,
+                  ),
                   Center(
                     child: CheckmarkIcon(
                       size: 95.h,
@@ -108,8 +109,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(height: 30.h),
                   const AuthHeader(
                     title: "Let's get started!",
-                    ),
-                  
+                  ),
+
                   SizedBox(height: 40.h),
 
                   // Name Field
@@ -125,7 +126,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       color: AppTheme.textSecondaryColor,
                     ),
                   ),
-                  
+
                   SizedBox(height: 20.h),
 
                   // Email Field
@@ -140,7 +141,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       color: AppTheme.textSecondaryColor,
                     ),
                   ),
-                  
+
                   SizedBox(height: 20.h),
 
                   // Password Field
@@ -156,7 +157,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       color: AppTheme.textSecondaryColor,
                     ),
                   ),
-                  
+
                   SizedBox(height: 32.h),
 
                   // Sign Up Button
@@ -170,63 +171,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       );
                     },
                   ),
-                  
+
                   SizedBox(height: 24.h),
 
-                  
-                  
-                
-                  // Divider
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          color: AppTheme.borderColor,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: Text(
-                          'or',
-                          style: AppTheme.bodyMedium,
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          color: AppTheme.borderColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  SizedBox(height: 24.h),
-
-                  // Social Login Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-
-                      SocialLoginButton(
-                    provider: AppConstants.googleProvider,
-                    onPressed: () => _handleSocialLogin('Google'),
-                  ),
-                  
-                  SocialLoginButton(
-                    provider: AppConstants.facebookProvider,
-                    onPressed: () => _handleSocialLogin('Facebook'),
-                  ),
-                  
-                  SocialLoginButton(
-                    provider: AppConstants.appleProvider,
-                    onPressed: () => _handleSocialLogin('Apple'),
-                  ),
-
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-                  
                   // Login Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -250,7 +197,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ],
                   ),
-                  
+
                   SizedBox(height: 20.h),
                 ],
               ),

@@ -5,14 +5,16 @@ import '../../../core/constants/app_constants.dart';
 
 class TaskHeader extends StatelessWidget {
   final VoidCallback onMenuPressed;
-  final VoidCallback onSearchPressed;
-  final VoidCallback onMorePressed;
+
+  final VoidCallback onFilterPressed;
+  final bool hasActiveFilters;
 
   const TaskHeader({
     super.key,
     required this.onMenuPressed,
-    required this.onSearchPressed,
-    required this.onMorePressed,
+   
+    required this.onFilterPressed,
+    this.hasActiveFilters = false,
   });
 
   @override
@@ -41,57 +43,48 @@ class TaskHeader extends StatelessWidget {
           
           // Top Row - Menu, Search, More
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Menu Button
               IconButton(
                 onPressed: onMenuPressed,
-                icon: Icon(
+                icon:const Icon(
                   Icons.menu_rounded,
                   color: Colors.white,
                   size: AppConstants.iconSizeLarge,
                 ),
               ),
               
-              // Search Bar
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 12.w),
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
+             
+              // Filter Button
+              Stack(
+                children: [
+                  IconButton(
+                    onPressed: onFilterPressed,
+                    icon: const Icon(
+                      Icons.filter_list_rounded,
+                      color: Colors.white,
+                      size: AppConstants.iconSizeLarge,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.search_rounded,
-                        color: Colors.white.withOpacity(0.8),
-                        size: AppConstants.iconSizeMedium,
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Search tasks...',
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: Colors.white.withOpacity(0.8),
+                  if (hasActiveFilters)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        width: 8.w,
+                        height: 8.h,
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 1,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              // More Options Button
-              IconButton(
-                onPressed: onMorePressed,
-                icon: Icon(
-                  Icons.more_vert_rounded,
-                  color: Colors.white,
-                  size: AppConstants.iconSizeLarge,
-                ),
+                    ),
+                ],
               ),
             ],
           ),
