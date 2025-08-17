@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:whatbytes_assignment/features/tasks/widgets/simple_task_item.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../model/task.dart';
-import 'task_item.dart';
+
 
 class TaskSection extends StatelessWidget {
   final String title;
