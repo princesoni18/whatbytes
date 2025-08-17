@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:whatbytes_assignment/core/logger.dart';
 import 'auth_service.dart';
 
 // Events
@@ -91,19 +92,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _onAuthCheckRequested(AuthCheckRequested event, Emitter<AuthState> emit) {
-    print('AuthBloc: Checking authentication status');
+    AppLogger.info('AuthBloc: Checking authentication status');
     final user = _authService.currentUser;
     if (user != null) {
-      print('AuthBloc: User is authenticated: ${user.uid}');
+      AppLogger.info('AuthBloc: User is authenticated: ${user.uid}');
       emit(AuthAuthenticated(user));
     } else {
-      print('AuthBloc: User is not authenticated');
+      AppLogger.info('AuthBloc: User is not authenticated');
       emit(AuthUnauthenticated());
     }
   }
 
   void _onAuthUserChanged(AuthUserChanged event, Emitter<AuthState> emit) {
-    print('AuthBloc: Auth state changed, user: ${event.user?.uid}');
+    AppLogger.info('AuthBloc: Auth state changed, user: ${event.user?.uid}');
     if (event.user != null) {
       emit(AuthAuthenticated(event.user!));
     } else {
@@ -115,7 +116,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignUpRequested event,
     Emitter<AuthState> emit,
   ) async {
-    print('AuthBloc: Sign up requested for: ${event.email}');
+    AppLogger.info('AuthBloc: Sign up requested for: ${event.email}');
     emit(AuthLoading());
     
     try {
@@ -126,14 +127,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       
       if (user != null) {
-        print('AuthBloc: Sign up successful: ${user.uid}');
+        AppLogger.info('AuthBloc: Sign up successful: ${user.uid}');
         emit(AuthAuthenticated(user));
       } else {
-        print('AuthBloc: Sign up failed - no user returned');
+        AppLogger.info('AuthBloc: Sign up failed - no user returned');
         emit(const AuthError('Sign up failed'));
       }
     } catch (e) {
-      print('AuthBloc: Sign up error - $e');
+      AppLogger.error('AuthBloc: Sign up error - $e');
       emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
     }
   }
@@ -142,7 +143,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
-    print('AuthBloc: Sign in requested for: ${event.email}');
+    AppLogger.info('AuthBloc: Sign in requested for: ${event.email}');
     emit(AuthLoading());
     
     try {
@@ -152,14 +153,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       
       if (user != null) {
-        print('AuthBloc: Sign in successful: ${user.uid}');
+        AppLogger.info('AuthBloc: Sign in successful: ${user.uid}');
         emit(AuthAuthenticated(user));
       } else {
-        print('AuthBloc: Sign in failed - no user returned');
+        AppLogger.info('AuthBloc: Sign in failed - no user returned');
         emit(const AuthError('Sign in failed'));
       }
     } catch (e) {
-      print('AuthBloc: Sign in error - $e');
+      AppLogger.error('AuthBloc: Sign in error - $e');
       emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
     }
   }
@@ -168,15 +169,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    print('AuthBloc: Sign out requested');
+    AppLogger.info('AuthBloc: Sign out requested');
     emit(AuthLoading());
     
     try {
       await _authService.signOut();
-      print('AuthBloc: Sign out successful');
+      AppLogger.info('AuthBloc: Sign out successful');
       emit(AuthUnauthenticated());
     } catch (e) {
-      print('AuthBloc: Sign out error - $e');
+      AppLogger.error('AuthBloc: Sign out error - $e');
       emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
     }
   }
@@ -185,15 +186,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthPasswordResetRequested event,
     Emitter<AuthState> emit,
   ) async {
-    print('AuthBloc: Password reset requested for: ${event.email}');
+    AppLogger.info('AuthBloc: Password reset requested for: ${event.email}');
     emit(AuthLoading());
     
     try {
       await _authService.resetPassword(email: event.email);
-      print('AuthBloc: Password reset email sent');
+      AppLogger.info('AuthBloc: Password reset email sent');
       emit(AuthPasswordResetSent(event.email));
     } catch (e) {
-      print('AuthBloc: Password reset error - $e');
+      AppLogger.error('AuthBloc: Password reset error - $e');
       emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
     }
   }

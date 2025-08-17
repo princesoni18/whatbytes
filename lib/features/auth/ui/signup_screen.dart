@@ -60,12 +60,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  void _handleSocialLogin(String provider) {
-    // Handle social login logic here
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$provider login not implemented yet')),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {

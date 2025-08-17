@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
+import 'package:whatbytes_assignment/features/tasks/bloc/simple_task_bloc.dart';
 import '../../features/tasks/repo/task_service.dart';
-import '../../features/tasks/bloc/task_bloc.dart';
+
 import '../../features/auth/auth_service.dart';
 import '../../features/auth/simple_auth_bloc.dart';
 

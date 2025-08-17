@@ -23,7 +23,7 @@ class TaskHeader extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(AppConstants.screenPadding.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
             AppTheme.primaryColor,
             AppTheme.secondaryColor,

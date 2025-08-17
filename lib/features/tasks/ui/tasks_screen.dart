@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:whatbytes_assignment/features/tasks/widgets/task_item.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import '../bloc/task_bloc.dart';
+import 'package:whatbytes_assignment/core/logger.dart';
+import '../bloc/simple_task_bloc.dart';
 import '../../auth/simple_auth_bloc.dart';
+import '../model/task.dart';
 import '../model/task_filter.dart';
 import '../widgets/task_header.dart';
-import '../widgets/simple_task_item.dart';
 import '../widgets/custom_fab.dart';
 import '../widgets/task_filter_dialog.dart';
 import 'add_task_screen.dart';
+import 'edit_task_screen.dart';
+
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -26,18 +30,29 @@ class _TasksScreenState extends State<TasksScreen> {
   void initState() {
     super.initState();
     // Load tasks when the screen loads
-    print('TasksScreen: Loading tasks');
+  AppLogger.debug('TasksScreen: Loading tasks');
     context.read<TaskBloc>().add(LoadTasks());
   }
 
   void _toggleTaskCompletion(String taskId, bool currentStatus) {
-    print('TasksScreen: Toggling task $taskId (current status: $currentStatus)');
-    print('TasksScreen: Dispatching ToggleTask event');
+  AppLogger.debug('TasksScreen: Toggling task $taskId (current status: $currentStatus)');
+  AppLogger.debug('TasksScreen: Dispatching ToggleTask event');
     context.read<TaskBloc>().add(ToggleTask(taskId));
   }
 
   void _deleteTask(String taskId) {
     context.read<TaskBloc>().add(DeleteTask(taskId));
+  }
+
+  void _editTask(Task task) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: context.read<TaskBloc>(),
+          child: EditTaskScreen(task: task),
+        ),
+      ),
+    );
   }
 
   
@@ -78,19 +93,19 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  void _showFilterDialog(TaskFilterCriteria currentFilter) {
-    showDialog<TaskFilterCriteria>(
+  void _showFilterDialog(TaskFilterCriteria currentFilter) async {
+    final filterCriteria = await showDialog<TaskFilterCriteria>(
       context: context,
       builder: (BuildContext context) {
         return TaskFilterDialog(
           initialCriteria: currentFilter,
         );
       },
-    ).then((filterCriteria) {
-      if (filterCriteria != null) {
-        context.read<TaskBloc>().add(FilterTasks(filterCriteria));
-      }
-    });
+    );
+    
+    if (filterCriteria != null && mounted) {
+      context.read<TaskBloc>().add(FilterTasks(filterCriteria));
+    }
   }
 
   @override
@@ -122,9 +137,9 @@ class _TasksScreenState extends State<TasksScreen> {
             Expanded(
               child: BlocConsumer<TaskBloc, TaskState>(
                 listener: (context, state) {
-                  print('TasksScreen: BLoC state changed to ${state.runtimeType}');
+                  AppLogger.debug('TasksScreen: BLoC state changed to [1m${state.runtimeType}[0m');
                   if (state is TaskError) {
-                    print('TasksScreen: Error - ${state.message}');
+                    AppLogger.error('TasksScreen: Error - ${state.message}');
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(state.message),
@@ -132,7 +147,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       ),
                     );
                   } else if (state is TasksLoaded) {
-                    print('TasksScreen: Tasks loaded - ${state.tasks.length} tasks');
+                    AppLogger.info('TasksScreen: Tasks loaded - ${state.tasks.length} tasks');
                   }
                 },
                 builder: (context, state) {
@@ -141,7 +156,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       child: CircularProgressIndicator(),
                     );
                   } else if (state is TasksLoaded) {
-                    print("state changed");
+                    AppLogger.debug("state changed");
                     return _buildTasksList(state);
                   } else if (state is TaskError) {
                     return _buildErrorView(state);
@@ -285,6 +300,7 @@ class _TasksScreenState extends State<TasksScreen> {
             task: task,
             onToggle: () => _toggleTaskCompletion(task.id, task.isCompleted),
             onDelete: () => _deleteTask(task.id),
+            onEdit: () => _editTask(task),
           )).toList(),
           
           SizedBox(height: 100.h), // Space for FAB

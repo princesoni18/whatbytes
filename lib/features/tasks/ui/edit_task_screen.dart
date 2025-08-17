@@ -1,29 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:whatbytes_assignment/features/tasks/bloc/simple_task_bloc.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../model/task.dart';
+import '../bloc/simple_task_bloc.dart';
 
-
-class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+class EditTaskScreen extends StatefulWidget {
+  final Task task;
+  
+  const EditTaskScreen({
+    super.key,
+    required this.task,
+  });
 
   @override
-  State<AddTaskScreen> createState() => _AddTaskScreenState();
+  State<EditTaskScreen> createState() => _EditTaskScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
+class _EditTaskScreenState extends State<EditTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
   
-  DateTime? _selectedDate;
-  TaskPriority _selectedPriority = TaskPriority.medium;
-  TaskCategory _selectedCategory = TaskCategory.personal;
+  late DateTime _selectedDate;
+  late TaskPriority _selectedPriority;
+  late TaskCategory _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Initialize controllers with current task data
+    _titleController = TextEditingController(text: widget.task.title);
+    _descriptionController = TextEditingController(text: widget.task.description ?? '');
+    
+    // Initialize selections with current task data
+    _selectedDate = widget.task.dueDate;
+    _selectedPriority = widget.task.priority;
+    _selectedCategory = widget.task.category;
+  }
 
   @override
   void dispose() {
@@ -35,7 +53,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
@@ -59,22 +77,48 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-  void _createTask() {
+  void _updateTask() {
     if (_formKey.currentState!.validate()) {
-      final task = Task(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+      final updatedTask = widget.task.copyWith(
         title: _titleController.text.trim(),
-        description: _descriptionController.text.trim(),
-        dueDate: _selectedDate ?? DateTime.now().add(const Duration(days: 1)),
+        description: _descriptionController.text.trim().isEmpty 
+            ? null 
+            : _descriptionController.text.trim(),
+        dueDate: _selectedDate,
         priority: _selectedPriority,
-        isCompleted: false,
-        createdAt: DateTime.now(),
         category: _selectedCategory,
       );
 
-      context.read<TaskBloc>().add(CreateTask(task));
+      context.read<TaskBloc>().add(UpdateTask(updatedTask));
       Navigator.of(context).pop();
     }
+  }
+
+  void _deleteTask() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Task'),
+          content: const Text('Are you sure you want to delete this task? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop(); // Close edit screen
+                context.read<TaskBloc>().add(DeleteTask(widget.task.id));
+              },
+              style: TextButton.styleFrom(foregroundColor: AppTheme.errorColor),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -93,7 +137,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Add New Task',
+          'Edit Task',
           style: AppTheme.headingMedium.copyWith(
             fontSize: 20.sp,
             fontWeight: FontWeight.w600,
@@ -101,6 +145,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.delete_outline,
+              color: AppTheme.errorColor,
+              size: 24.sp,
+            ),
+            onPressed: _deleteTask,
+          ),
+        ],
       ),
       body: Form(
         key: _formKey,
@@ -109,6 +163,47 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Task Status
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: widget.task.isCompleted 
+                      ? AppTheme.successColor.withOpacity(0.1)
+                      : AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium.r),
+                  border: Border.all(
+                    color: widget.task.isCompleted 
+                        ? AppTheme.successColor
+                        : AppTheme.primaryColor,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      widget.task.isCompleted ? Icons.check_circle : Icons.schedule,
+                      size: 16.sp,
+                      color: widget.task.isCompleted 
+                          ? AppTheme.successColor
+                          : AppTheme.primaryColor,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      widget.task.isCompleted ? 'Completed' : 'Pending',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: widget.task.isCompleted 
+                            ? AppTheme.successColor
+                            : AppTheme.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              SizedBox(height: 20.h),
+              
               // Title Field
               Text(
                 'Task Title',
@@ -160,7 +255,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               GestureDetector(
                 onTap: _selectDate,
                 child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 200),
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(
                     horizontal: AppConstants.mediumPadding,
@@ -179,13 +274,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       ),
                       SizedBox(width: 12.w),
                       Text(
-                        _selectedDate == null
-                            ? 'Select due date'
-                            : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                        '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
                         style: AppTheme.bodyMedium.copyWith(
-                          color: _selectedDate == null
-                              ? AppTheme.textSecondaryColor
-                              : AppTheme.textPrimaryColor,
+                          color: AppTheme.textPrimaryColor,
                         ),
                       ),
                     ],
@@ -215,7 +306,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       child: GestureDetector(
                         onTap: () => setState(() => _selectedPriority = priority),
                         child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                          duration: const Duration(milliseconds: 200),
                           padding: EdgeInsets.symmetric(vertical: 12.h),
                           decoration: BoxDecoration(
                             color: isSelected
@@ -309,10 +400,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               
               SizedBox(height: 40.h),
               
-              // Create Button
+              // Update Button
               CustomButton(
-                text: 'Create Task',
-                onPressed: _createTask,
+                text: 'Update Task',
+                onPressed: _updateTask,
               ),
             ],
           ),

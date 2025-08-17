@@ -58,55 +58,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handleSocialLogin(String provider) {
-    // Handle social login logic here
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$provider login not implemented yet')),
-    );
-  }
 
-  void _showEmailDropdown() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppConstants.borderRadiusLarge),
-        ),
-      ),
-      builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(AppConstants.screenPadding.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Select Email',
-                style: AppTheme.headingMedium,
-              ),
-              SizedBox(height: 20.h),
-              ListTile(
-                leading: const Icon(Icons.email, color: AppTheme.primaryColor),
-                title: const Text(AppConstants.defaultEmail),
-                onTap: () {
-                 
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.email, color: AppTheme.primaryColor),
-                title: const Text('user@example.com'),
-                onTap: () {
-                  _emailController.text = 'user@example.com';
-                  Navigator.pop(context);
-                },
-              ),
-              SizedBox(height: 20.h),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
+  
 
   @override
   Widget build(BuildContext context) {

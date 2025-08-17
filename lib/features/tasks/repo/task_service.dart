@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:whatbytes_assignment/core/logger.dart';
 import '../model/task.dart';
 
 class TaskService {
@@ -18,12 +19,12 @@ class TaskService {
   // Create Task
   Future<Task> createTask(Task task) async {
     try {
-      print('TaskService: Creating task ${task.title}');
+  AppLogger.info('TaskService: Creating task ${task.title}');
       final docRef = await _tasksCollection.add(_taskToFirestore(task));
       final doc = await docRef.get();
       return _taskFromFirestore(doc);
     } catch (e) {
-      print('TaskService: Failed to create task - $e');
+  AppLogger.error('TaskService: Failed to create task', e);
       throw Exception('Failed to create task: $e');
     }
   }
@@ -31,16 +32,16 @@ class TaskService {
   // Get All Tasks (one-time fetch)
   Future<List<Task>> getAllTasks() async {
     try {
-      print('TaskService: Fetching all tasks');
+  AppLogger.info('TaskService: Fetching all tasks');
       final snapshot = await _tasksCollection
           .orderBy('createdAt', descending: true)
           .get();
       
       final tasks = snapshot.docs.map((doc) => _taskFromFirestore(doc)).toList();
-      print('TaskService: Fetched ${tasks.length} tasks');
+  AppLogger.info('TaskService: Fetched ${tasks.length} tasks');
       return tasks;
     } catch (e) {
-      print('TaskService: Failed to fetch tasks - $e');
+  AppLogger.error('TaskService: Failed to fetch tasks', e);
       throw Exception('Failed to fetch tasks: $e');
     }
   }
@@ -48,16 +49,16 @@ class TaskService {
   // Watch Tasks Stream (keeping for backward compatibility if needed)
   Stream<List<Task>> watchTasks() {
     try {
-      print('TaskService: Starting to watch tasks');
+  AppLogger.info('TaskService: Starting to watch tasks');
       return _tasksCollection
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) {
-        print('TaskService: Received ${snapshot.docs.length} tasks from Firestore');
+  AppLogger.debug('TaskService: Received ${snapshot.docs.length} tasks from Firestore');
         return snapshot.docs.map((doc) => _taskFromFirestore(doc)).toList();
       });
     } catch (e) {
-      print('TaskService: Error watching tasks - $e');
+  AppLogger.error('TaskService: Error watching tasks', e);
       throw Exception('Failed to watch tasks: $e');
     }
   }
@@ -65,7 +66,7 @@ class TaskService {
   // Toggle Task Completion (no return, just update)
   Future<void> toggleTaskCompletionSync(String taskId, bool newStatus) async {
     try {
-      print('TaskService: Syncing task $taskId completion to $newStatus');
+  AppLogger.info('TaskService: Syncing task $taskId completion to $newStatus');
       
       final updateData = {
         'isCompleted': newStatus,
@@ -73,9 +74,9 @@ class TaskService {
       };
       
       await _tasksCollection.doc(taskId).update(updateData);
-      print('TaskService: Task $taskId synced successfully');
+  AppLogger.info('TaskService: Task $taskId synced successfully');
     } catch (e) {
-      print('TaskService: Failed to sync task toggle - $e');
+  AppLogger.error('TaskService: Failed to sync task toggle', e);
       throw Exception('Failed to sync task: $e');
     }
   }
@@ -84,7 +85,7 @@ class TaskService {
   Future<Task> toggleTaskCompletion(String taskId, bool currentStatus) async {
     try {
       final newStatus = !currentStatus;
-      print('TaskService: Toggling task $taskId from $currentStatus to $newStatus');
+  AppLogger.info('TaskService: Toggling task $taskId from $currentStatus to $newStatus');
       
       final updateData = {
         'isCompleted': newStatus,
@@ -94,10 +95,10 @@ class TaskService {
       await _tasksCollection.doc(taskId).update(updateData);
       final doc = await _tasksCollection.doc(taskId).get();
       
-      print('TaskService: Task $taskId toggled successfully');
+  AppLogger.info('TaskService: Task $taskId toggled successfully');
       return _taskFromFirestore(doc);
     } catch (e) {
-      print('TaskService: Failed to toggle task - $e');
+  AppLogger.error('TaskService: Failed to toggle task', e);
       throw Exception('Failed to toggle task: $e');
     }
   }
@@ -105,11 +106,11 @@ class TaskService {
   // Delete Task
   Future<void> deleteTask(String taskId) async {
     try {
-      print('TaskService: Deleting task $taskId');
+  AppLogger.info('TaskService: Deleting task $taskId');
       await _tasksCollection.doc(taskId).delete();
-      print('TaskService: Task $taskId deleted successfully');
+  AppLogger.info('TaskService: Task $taskId deleted successfully');
     } catch (e) {
-      print('TaskService: Failed to delete task - $e');
+  AppLogger.error('TaskService: Failed to delete task', e);
       throw Exception('Failed to delete task: $e');
     }
   }
@@ -117,13 +118,13 @@ class TaskService {
   // Update Task
   Future<Task> updateTask(Task task) async {
     try {
-      print('TaskService: Updating task ${task.id}');
+  AppLogger.info('TaskService: Updating task ${task.id}');
       await _tasksCollection.doc(task.id).update(_taskToFirestore(task));
       final doc = await _tasksCollection.doc(task.id).get();
-      print('TaskService: Task ${task.id} updated successfully');
+  AppLogger.info('TaskService: Task ${task.id} updated successfully');
       return _taskFromFirestore(doc);
     } catch (e) {
-      print('TaskService: Failed to update task - $e');
+  AppLogger.error('TaskService: Failed to update task', e);
       throw Exception('Failed to update task: $e');
     }
   }

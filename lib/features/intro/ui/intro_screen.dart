@@ -4,9 +4,7 @@ import 'package:whatbytes_assignment/features/intro/ui/bottom_circle.dart';
 import 'package:whatbytes_assignment/shared/widgets/check_icon.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../shared/widgets/custom_button.dart';
-import '../../auth/ui/signup_screen.dart';
-import '../../auth/ui/login_screen.dart';
+
 
 class IntroScreen extends StatelessWidget {
   const IntroScreen({super.key});

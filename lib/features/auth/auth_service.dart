@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:whatbytes_assignment/core/logger.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,7 +20,7 @@ class AuthService {
     String? displayName,
   }) async {
     try {
-      print('AuthService: Signing up user with email: $email');
+  AppLogger.info('AuthService: Signing up user with email: $email');
       
       final UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
@@ -34,13 +35,13 @@ class AuthService {
         await user.reload();
       }
       
-      print('AuthService: User signed up successfully: ${user?.uid}');
+  AppLogger.info('AuthService: User signed up successfully: ${user?.uid}');
       return user;
     } on FirebaseAuthException catch (e) {
-      print('AuthService: Sign up failed - ${e.code}: ${e.message}');
+  AppLogger.error('AuthService: Sign up failed - ${e.code}: ${e.message}', e);
       throw _handleAuthException(e);
     } catch (e) {
-      print('AuthService: Sign up error - $e');
+  AppLogger.error('AuthService: Sign up error', e);
       throw Exception('An unexpected error occurred during sign up');
     }
   }
@@ -51,7 +52,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      print('AuthService: Signing in user with email: $email');
+  AppLogger.info('AuthService: Signing in user with email: $email');
       
       final UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email.trim(),
@@ -59,13 +60,13 @@ class AuthService {
       );
       
       final User? user = result.user;
-      print('AuthService: User signed in successfully: ${user?.uid}');
+  AppLogger.info('AuthService: User signed in successfully: ${user?.uid}');
       return user;
     } on FirebaseAuthException catch (e) {
-      print('AuthService: Sign in failed - ${e.code}: ${e.message}');
+  AppLogger.error('AuthService: Sign in failed - ${e.code}: ${e.message}', e);
       throw _handleAuthException(e);
     } catch (e) {
-      print('AuthService: Sign in error - $e');
+  AppLogger.error('AuthService: Sign in error', e);
       throw Exception('An unexpected error occurred during sign in');
     }
   }
@@ -73,11 +74,11 @@ class AuthService {
   // Sign out
   Future<void> signOut() async {
     try {
-      print('AuthService: Signing out user: ${_auth.currentUser?.uid}');
+  AppLogger.info('AuthService: Signing out user: ${_auth.currentUser?.uid}');
       await _auth.signOut();
-      print('AuthService: User signed out successfully');
+  AppLogger.info('AuthService: User signed out successfully');
     } catch (e) {
-      print('AuthService: Sign out error - $e');
+  AppLogger.error('AuthService: Sign out error', e);
       throw Exception('Failed to sign out');
     }
   }
@@ -85,14 +86,14 @@ class AuthService {
   // Reset password
   Future<void> resetPassword({required String email}) async {
     try {
-      print('AuthService: Sending password reset email to: $email');
+  AppLogger.info('AuthService: Sending password reset email to: $email');
       await _auth.sendPasswordResetEmail(email: email.trim());
-      print('AuthService: Password reset email sent successfully');
+  AppLogger.info('AuthService: Password reset email sent successfully');
     } on FirebaseAuthException catch (e) {
-      print('AuthService: Password reset failed - ${e.code}: ${e.message}');
+  AppLogger.error('AuthService: Password reset failed - ${e.code}: ${e.message}', e);
       throw _handleAuthException(e);
     } catch (e) {
-      print('AuthService: Password reset error - $e');
+  AppLogger.error('AuthService: Password reset error', e);
       throw Exception('Failed to send password reset email');
     }
   }
@@ -105,14 +106,14 @@ class AuthService {
         throw Exception('No user logged in');
       }
       
-      print('AuthService: Deleting account: ${user.uid}');
+  AppLogger.info('AuthService: Deleting account: ${user.uid}');
       await user.delete();
-      print('AuthService: Account deleted successfully');
+  AppLogger.info('AuthService: Account deleted successfully');
     } on FirebaseAuthException catch (e) {
-      print('AuthService: Account deletion failed - ${e.code}: ${e.message}');
+  AppLogger.error('AuthService: Account deletion failed - ${e.code}: ${e.message}', e);
       throw _handleAuthException(e);
     } catch (e) {
-      print('AuthService: Account deletion error - $e');
+  AppLogger.error('AuthService: Account deletion error', e);
       throw Exception('Failed to delete account');
     }
   }
@@ -128,7 +129,7 @@ class AuthService {
         throw Exception('No user logged in');
       }
 
-      print('AuthService: Updating profile for user: ${user.uid}');
+  AppLogger.info('AuthService: Updating profile for user: ${user.uid}');
       
       if (displayName != null) {
         await user.updateDisplayName(displayName.trim());
@@ -139,12 +140,12 @@ class AuthService {
       }
       
       await user.reload();
-      print('AuthService: Profile updated successfully');
+  AppLogger.info('AuthService: Profile updated successfully');
     } on FirebaseAuthException catch (e) {
-      print('AuthService: Profile update failed - ${e.code}: ${e.message}');
+      AppLogger.error('AuthService: Profile update failed - ${e.code}: ${e.message}', e);
       throw _handleAuthException(e);
     } catch (e) {
-      print('AuthService: Profile update error - $e');
+      AppLogger.error('AuthService: Profile update error', e);
       throw Exception('Failed to update profile');
     }
   }
@@ -160,8 +161,8 @@ class AuthService {
         throw Exception('No user logged in');
       }
 
-      print('AuthService: Changing password for user: ${user.uid}');
-      
+      AppLogger.info('AuthService: Changing password for user: ${user.uid}');
+
       // Re-authenticate user before changing password
       final credential = EmailAuthProvider.credential(
         email: user.email!,
@@ -170,13 +171,13 @@ class AuthService {
       
       await user.reauthenticateWithCredential(credential);
       await user.updatePassword(newPassword);
-      
-      print('AuthService: Password changed successfully');
+
+      AppLogger.info('AuthService: Password changed successfully');
     } on FirebaseAuthException catch (e) {
-      print('AuthService: Password change failed - ${e.code}: ${e.message}');
+      AppLogger.error('AuthService: Password change failed - ${e.code}: ${e.message}', e);
       throw _handleAuthException(e);
     } catch (e) {
-      print('AuthService: Password change error - $e');
+      AppLogger.error('AuthService: Password change error', e);
       throw Exception('Failed to change password');
     }
   }
