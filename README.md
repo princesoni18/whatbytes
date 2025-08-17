@@ -5,6 +5,7 @@ A Flutter task management app with Firebase authentication and storage.
 ## Features
 - Users will be able to create, edit, delete, and view tasks.
 - Task Filtering
+  
 ![task_gif](https://github.com/user-attachments/assets/daa8f3c1-615b-4cf0-959e-71d3d7655645)
 ## Requirements
 
